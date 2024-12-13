@@ -54,6 +54,7 @@ namespace WpfApp1_mastermind3_final_edition
 
         List<string> spelerNamen = new List<string>();
         bool extraSpeler = true;
+        string volgendeSpeler = "";
 
         public MainWindow()
         {
@@ -259,15 +260,13 @@ namespace WpfApp1_mastermind3_final_edition
         /// <param name="e">het klik event van de knop</param>
         private void checkButton_Click(object sender, RoutedEventArgs e)
         {
-
             if (attempts != maxAttempts && !hasWonGame)
             {
-
+             
                 LabelChanged(label1, 0, comboBox1);
                 LabelChanged(label2, 1, comboBox2);
                 LabelChanged(label3, 2, comboBox3);
                 LabelChanged(label4, 3, comboBox4);
-
 
                 attempts++;
                 Startcountdown();
@@ -276,20 +275,45 @@ namespace WpfApp1_mastermind3_final_edition
                 pointslabel.Content = $"Jouw huidige score: {points}/100";
                 HasWon();
 
-                if (attempts >= maxAttempts && !hasWonGame)
+                
+                if (attempts >= maxAttempts && !hasWonGame || spelerIndex == -1)
                 {
-                    highscores[spelerIndex] = $"{inputNaam} - {attempts}/{maxAttempts} pogingen - {points}/100 punten";
+                 
+                    highscores[spelerIndex] = $"{spelerNamen[spelerIndex]} - {attempts}/{maxAttempts} pogingen - {points}/100 punten";
                     Stopcountdown();
-                    MessageBoxResult result = MessageBox.Show($"You Failed!" +
-                     $" De juiste kleurencombinatie: {kleuren[0]}, {kleuren[1]}, {kleuren[2]}, {kleuren[3]}  \r\n ", "Failed",
-                     MessageBoxButton.OK, MessageBoxImage.Information);
 
-                    spelerIndex++;
+                    if (spelerIndex + 1 < spelerNamen.Count)
+                    {
+                        volgendeSpeler = $"De volgende speler is {spelerNamen[spelerIndex + 1]}.";
+                    }
+                    else
+                    {
+                        volgendeSpeler = "Dit was de laatste speler!";
+                       
+                    }
 
+                        MessageBoxResult result = MessageBox.Show($"You Failed!" +
+                        $" De juiste kleurencombinatie: {kleuren[0]}, {kleuren[1]}, {kleuren[2]}, {kleuren[3]}  \r\n {volgendeSpeler}",
+                        $"{spelerNamen[spelerIndex]}",
+                        MessageBoxButton.OK, MessageBoxImage.Information);
+               
+                    if (result == MessageBoxResult.OK)
+                    {
+                       
+                        ResetGame();
+
+                        spelerIndex++;
+                    }
+
+                    if (spelerIndex >= spelerNamen.Count)
+                    {
+                        Highscoreshow();
+                    
+                    }
+                  
                 }
 
             }
-
         }
         /// <summary>
         /// In de titel worden de pogingen getoont
@@ -428,15 +452,22 @@ namespace WpfApp1_mastermind3_final_edition
 
             if (label1.BorderBrush == Brushes.DarkRed && label2.BorderBrush == Brushes.DarkRed && label3.BorderBrush == Brushes.DarkRed && label4.BorderBrush == Brushes.DarkRed)
             {
-                highscores[spelerIndex] = $"{inputNaam} - {attempts}/{maxAttempts} pogingen - {points}/100 punten";
-                spelerIndex++;
+                highscores[spelerIndex] = $"{spelerNamen[spelerIndex]} - {attempts}/{maxAttempts} pogingen - {points}/100 punten";
+                
                 hasWonGame = true;
                 Stopcountdown();
-                MessageBoxResult result = MessageBox.Show($"Je hebt gewonnen in {attempts} beurten!",
-                    "WINNER!", MessageBoxButton.OK, MessageBoxImage.Information);
+                MessageBoxResult result = MessageBox.Show($"Je hebt gewonnen in {attempts} beurten! \r\n De volgende speler is {spelerNamen[spelerIndex + 1]}",
+                    $"{spelerNamen[spelerIndex]}", MessageBoxButton.OK, MessageBoxImage.Information);
 
+                if (result == MessageBoxResult.OK)
+                {
+                    ResetGame();
+                    
+                }
+                spelerIndex++;
             }
 
+            Startgame();
         }
         /// <summary>
         /// Voert het event uit bij het sluiten van het venster en stelt een vraag aan de gebruiker.
@@ -504,7 +535,7 @@ namespace WpfApp1_mastermind3_final_edition
         /// </summary>
         private void ResetGame()
         {
-            maxAttempts = Pogingen();
+          
             hasWonGame = false;
             points = 100;
             attempts = 0;
@@ -527,6 +558,7 @@ namespace WpfApp1_mastermind3_final_edition
 
             historiekgrid.Children.Clear();
             pointslabel.Content = $"Jouw huidige score: {points}/100";
+
         }
         /// <summary>
         /// Inputbox wordt gegenereerd, deze blijft genereren totdat de input correct is ingevuld
@@ -534,6 +566,9 @@ namespace WpfApp1_mastermind3_final_edition
         /// <returns>Naam speler</returns>
         private string Startgame()
         {
+
+            
+
             while (extraSpeler)
             {
                 inputNaam = Interaction.InputBox("Voer een correcte naam in:", "Mastermind");
@@ -556,62 +591,67 @@ namespace WpfApp1_mastermind3_final_edition
                     extraSpeler = false;
 
                 }
-               
+
             }
             return inputNaam;
         }
 
-                private void Menurestart_Click(object sender, RoutedEventArgs e)
-                {
-                ResetGame();
-                Startgame();
+        private void Menurestart_Click(object sender, RoutedEventArgs e)
+        {
+            Array.Clear(highscores, 0, highscores.Length);
+            ResetGame();
+            Startgame();
+            
+
+        }
+
+        private void Menu_close_Click(object sender, RoutedEventArgs e)
+        {
+            this.Close();
+        }
+
+        private void Menu_pogingen_Click(object sender, RoutedEventArgs e)
+        {
+            Stopcountdown();
 
 
+        }
+        private int Pogingen()
+        {
 
-                }
+            string inputAttempts = Interaction.InputBox("Hoeveel pogingen wens je te spelen?" + "Kies een getal tussen 3 en 20", "Mastermind");
+            bool validNumber = int.TryParse(inputAttempts, out int inputGetal);
 
-            private void Menu_close_Click(object sender, RoutedEventArgs e)
+
+            while (string.IsNullOrEmpty(inputAttempts) || !validNumber || inputGetal < 3 || inputGetal > 20)
             {
-                this.Close();
+                MessageBox.Show("Geef een correct aantal tussen 3 - 20!", "Foutieve invoer");
+                inputAttempts = Interaction.InputBox("Geef een correct getal", "Invoer");
+
+                validNumber = int.TryParse(inputAttempts, out inputGetal);
+
             }
 
-            private void Menu_pogingen_Click(object sender, RoutedEventArgs e)
+            return inputGetal;
+        }
+
+        private void menu_Highscores_click(object sender, RoutedEventArgs e)
+        {
+            Highscoreshow();
+
+
+        }
+
+        private void Highscoreshow()
+        {
+            highscoreTekst = "";
+            for (int i = 0; i < spelerIndex; i++)
             {
-                Stopcountdown();
-
-
-            }
-            private int Pogingen()
-            {
-
-                string inputAttempts = Interaction.InputBox("Hoeveel pogingen wens je te spelen?" + "Kies een getal tussen 3 en 20", "Mastermind");
-                bool validNumber = int.TryParse(inputAttempts, out int inputGetal);
-
-
-                while (string.IsNullOrEmpty(inputAttempts) || !validNumber || inputGetal < 3 || inputGetal > 20)
-                {
-                    MessageBox.Show("Geef een correct aantal tussen 3 - 20!", "Foutieve invoer");
-                    inputAttempts = Interaction.InputBox("Geef een correct getal", "Invoer");
-
-                    validNumber = int.TryParse(inputAttempts, out inputGetal);
-
-                }
-
-                return inputGetal;
+                highscoreTekst += $"{highscores[i]} \r\n";
             }
 
-            private void menu_Highscores_click(object sender, RoutedEventArgs e)
-            {
-                highscoreTekst = "";
-                for (int i = 0; i < spelerIndex; i++)
-                {
-                    highscoreTekst += $"{highscores[i]}";
-                }
-
-                MessageBox.Show($"Scoreboard: \r\n {highscoreTekst}");
-
-
-            }
+            MessageBox.Show($"Scoreboard: \r\n {highscoreTekst}", "Highscores");
         }
     }
+}
 
