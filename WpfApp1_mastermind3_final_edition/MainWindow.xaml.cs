@@ -56,10 +56,11 @@ namespace WpfApp1_mastermind3_final_edition
         bool extraSpeler = true;
         string volgendeSpeler = "";
 
+        MessageBoxResult result;
+
         public MainWindow()
         {
             InitializeComponent();
-
 
 
         }
@@ -115,8 +116,6 @@ namespace WpfApp1_mastermind3_final_edition
             Startgame();
             maxAttempts = Pogingen();
             GenerateRandomColors();
-
-            pointslabel.Content = $"Jouw huidige score: {points}/ 100";
             solutionTextBox.Visibility = Visibility.Hidden;
 
 
@@ -262,55 +261,65 @@ namespace WpfApp1_mastermind3_final_edition
         {
             if (attempts != maxAttempts && !hasWonGame)
             {
-             
+
                 LabelChanged(label1, 0, comboBox1);
                 LabelChanged(label2, 1, comboBox2);
                 LabelChanged(label3, 2, comboBox3);
                 LabelChanged(label4, 3, comboBox4);
-
                 attempts++;
                 Startcountdown();
                 UpdateTitle();
+                UpdatePointsLabel();
                 Historiek();
-                pointslabel.Content = $"Jouw huidige score: {points}/100";
                 HasWon();
 
-                
+
+
                 if (attempts >= maxAttempts && !hasWonGame || spelerIndex == -1)
                 {
-                 
+
                     highscores[spelerIndex] = $"{spelerNamen[spelerIndex]} - {attempts}/{maxAttempts} pogingen - {points}/100 punten";
                     Stopcountdown();
 
                     if (spelerIndex + 1 < spelerNamen.Count)
                     {
-                        volgendeSpeler = $"De volgende speler is {spelerNamen[spelerIndex + 1]}.";
+                        
+                        spelerIndex++;
+                        volgendeSpeler = $"De volgende speler is {spelerNamen[spelerIndex]}.";
+                        UpdatePointsLabel();
+
+                       
+                        result = MessageBox.Show($"You Failed!\r\n" +
+                        $"De juiste kleurencombinatie: {kleuren[0]}, {kleuren[1]}, {kleuren[2]}, {kleuren[3]}\r\n{volgendeSpeler}",
+                        $"{spelerNamen[spelerIndex - 1]}",
+                        MessageBoxButton.OK, MessageBoxImage.Information);
+
                     }
                     else
                     {
                         volgendeSpeler = "Dit was de laatste speler!";
-                       
-                    }
 
-                        MessageBoxResult result = MessageBox.Show($"You Failed!" +
-                        $" De juiste kleurencombinatie: {kleuren[0]}, {kleuren[1]}, {kleuren[2]}, {kleuren[3]}  \r\n {volgendeSpeler}",
+                        result = MessageBox.Show($"You Failed!\r\n" +
+                        $"De juiste kleurencombinatie: {kleuren[0]}, {kleuren[1]}, {kleuren[2]}, {kleuren[3]}\r\n{volgendeSpeler}",
                         $"{spelerNamen[spelerIndex]}",
                         MessageBoxButton.OK, MessageBoxImage.Information);
-               
+
+                    }
+
+
+
                     if (result == MessageBoxResult.OK)
                     {
-                       
                         ResetGame();
 
-                        spelerIndex++;
                     }
 
                     if (spelerIndex >= spelerNamen.Count)
                     {
                         Highscoreshow();
-                    
+
                     }
-                  
+
                 }
 
             }
@@ -453,21 +462,37 @@ namespace WpfApp1_mastermind3_final_edition
             if (label1.BorderBrush == Brushes.DarkRed && label2.BorderBrush == Brushes.DarkRed && label3.BorderBrush == Brushes.DarkRed && label4.BorderBrush == Brushes.DarkRed)
             {
                 highscores[spelerIndex] = $"{spelerNamen[spelerIndex]} - {attempts}/{maxAttempts} pogingen - {points}/100 punten";
-                
+
                 hasWonGame = true;
                 Stopcountdown();
-                MessageBoxResult result = MessageBox.Show($"Je hebt gewonnen in {attempts} beurten! \r\n De volgende speler is {spelerNamen[spelerIndex + 1]}",
+
+                if (spelerIndex + 1 < spelerNamen.Count)
+                {
+                    volgendeSpeler = $"De volgende speler is {spelerNamen[spelerIndex + 1]}.";
+                    pointslabel.Content = $"Jouw score: {points}/100 || Actieve speler is {spelerNamen[spelerIndex + 1]}";
+                }
+                else
+                {
+                    volgendeSpeler = "Dit was de laatste speler!";
+
+                }
+                MessageBoxResult result = MessageBox.Show($"Je hebt gewonnen in {attempts} beurten! \r\n De volgende speler is {volgendeSpeler}",
                     $"{spelerNamen[spelerIndex]}", MessageBoxButton.OK, MessageBoxImage.Information);
 
                 if (result == MessageBoxResult.OK)
                 {
                     ResetGame();
-                    
+                    spelerIndex++;
                 }
-                spelerIndex++;
+
+                if (spelerIndex >= spelerNamen.Count)
+                {
+                    Highscoreshow();
+
+                }
+
             }
 
-            Startgame();
         }
         /// <summary>
         /// Voert het event uit bij het sluiten van het venster en stelt een vraag aan de gebruiker.
@@ -535,14 +560,12 @@ namespace WpfApp1_mastermind3_final_edition
         /// </summary>
         private void ResetGame()
         {
-          
+
             hasWonGame = false;
-            points = 100;
             attempts = 0;
             UpdateTitle();
             GenerateRandomColors();
             timerTextBlock.Text = "";
-
             comboBox1.Text = "";
             label1.BorderThickness = new Thickness(0);
             label1.BorderBrush = null;
@@ -555,19 +578,21 @@ namespace WpfApp1_mastermind3_final_edition
             comboBox4.Text = "";
             label4.BorderThickness = new Thickness(0);
             label4.BorderBrush = null;
-
             historiekgrid.Children.Clear();
-            pointslabel.Content = $"Jouw huidige score: {points}/100";
+            points = 100;
+
+            
+            UpdatePointsLabel();
+
 
         }
         /// <summary>
         /// Inputbox wordt gegenereerd, deze blijft genereren totdat de input correct is ingevuld
         /// </summary>
         /// <returns>Naam speler</returns>
-        private string Startgame()
+        private void Startgame() 
         {
-
-            
+          
 
             while (extraSpeler)
             {
@@ -593,15 +618,19 @@ namespace WpfApp1_mastermind3_final_edition
                 }
 
             }
-            return inputNaam;
+            pointslabel.Content = $"Jouw score: {points}/100 || Actieve speler is {spelerNamen[spelerIndex]}";
         }
 
         private void Menurestart_Click(object sender, RoutedEventArgs e)
         {
+
             Array.Clear(highscores, 0, highscores.Length);
+            spelerNamen.Clear();
+            extraSpeler = true;
+            spelerIndex = 0;
             ResetGame();
             Startgame();
-            
+
 
         }
 
@@ -629,7 +658,6 @@ namespace WpfApp1_mastermind3_final_edition
                 inputAttempts = Interaction.InputBox("Geef een correct getal", "Invoer");
 
                 validNumber = int.TryParse(inputAttempts, out inputGetal);
-
             }
 
             return inputGetal;
@@ -639,18 +667,30 @@ namespace WpfApp1_mastermind3_final_edition
         {
             Highscoreshow();
 
-
         }
 
         private void Highscoreshow()
         {
             highscoreTekst = "";
-            for (int i = 0; i < spelerIndex; i++)
+            
+            for (int i = 0; i <= spelerIndex; i++)
             {
-                highscoreTekst += $"{highscores[i]} \r\n";
+                highscoreTekst += $"{highscores[i]}\r\n";
             }
 
-            MessageBox.Show($"Scoreboard: \r\n {highscoreTekst}", "Highscores");
+            
+            MessageBox.Show($"Scoreboard:\r\n{highscoreTekst}", "Highscores");
+        }
+
+        
+        private void UpdatePointsLabel()
+        {
+            pointslabel.Content = $"Jouw score: {points}/100 || Actieve speler is {spelerNamen[spelerIndex]}";
+        }
+
+        private void hintButton_Click(object sender, RoutedEventArgs e)
+        {
+
         }
     }
 }
