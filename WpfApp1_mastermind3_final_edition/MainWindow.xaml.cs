@@ -785,10 +785,6 @@ namespace WpfApp1_mastermind3_final_edition
 
         }
 
-        private void 
-      
-
-    }
 }
 
 
