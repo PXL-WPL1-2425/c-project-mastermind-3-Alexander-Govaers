@@ -38,9 +38,9 @@ namespace WpfApp1_mastermind3_final_edition
         int row = 0;
 
         // timer instellen
-        DispatcherTimer timer = new DispatcherTimer();
-        DateTime clicked;
+        DispatcherTimer timer;
         TimeSpan elapsedTime;
+        TimeSpan totalTime = TimeSpan.FromSeconds(10);
         bool timerStarted = false;
         bool hasWonGame = false;
         bool endGame = false;
@@ -62,6 +62,9 @@ namespace WpfApp1_mastermind3_final_edition
         {
             InitializeComponent();
 
+            timer = new DispatcherTimer();
+            timer.Interval = TimeSpan.FromMilliseconds(100);
+            timer.Tick += Timer_Tick;
 
         }
 
@@ -72,10 +75,8 @@ namespace WpfApp1_mastermind3_final_edition
         /// <param name="e">De starten van het event</param>
         private void Timer_Tick(object sender, EventArgs e)
         {
-            elapsedTime = DateTime.Now - clicked;
-            timerTextBlock.Text = elapsedTime.TotalSeconds.ToString("N3");
-
-
+            elapsedTime -= timer.Interval;
+            timerTextBlock.Text = elapsedTime.TotalSeconds.ToString("N2");
 
 
             if (attempts < maxAttempts)
@@ -85,13 +86,12 @@ namespace WpfApp1_mastermind3_final_edition
                 {
                     Stopcountdown();
                 }
-                else if (elapsedTime.TotalSeconds >= 10)
+                else if (elapsedTime <= TimeSpan.Zero)
                 {
 
                     Stopcountdown();
                     checkButton_Click(null, null);
-                    clicked = DateTime.Now;
-                    Startcountdown();
+                    
                 }
 
             }
@@ -283,12 +283,12 @@ namespace WpfApp1_mastermind3_final_edition
 
                     if (spelerIndex + 1 < spelerNamen.Count)
                     {
-                        
+
                         spelerIndex++;
                         volgendeSpeler = $"De volgende speler is {spelerNamen[spelerIndex]}.";
                         UpdatePointsLabel();
 
-                       
+
                         result = MessageBox.Show($"You Failed!\r\n" +
                         $"De juiste kleurencombinatie: {kleuren[0]}, {kleuren[1]}, {kleuren[2]}, {kleuren[3]}\r\n{volgendeSpeler}",
                         $"{spelerNamen[spelerIndex - 1]}",
@@ -349,6 +349,8 @@ namespace WpfApp1_mastermind3_final_edition
         private void LabelChanged(Label kleurLabel, int positie, ComboBox input)
 
         {
+
+
             string oplossing;
 
 
@@ -379,17 +381,20 @@ namespace WpfApp1_mastermind3_final_edition
                 kleurLabel.BorderBrush = Brushes.DarkRed;
                 kleurLabel.BorderThickness = new Thickness(4);
 
+
             }
             else if (solutionTextBox.Text.Contains(input.Text) && input.Text != "")
             {
                 kleurLabel.BorderBrush = Brushes.Wheat;
                 points -= 1;
                 kleurLabel.BorderThickness = new Thickness(4);
+
             }
             else
             {
                 kleurLabel.BorderThickness = new Thickness(0);
                 points -= 2;
+
             }
 
         }
@@ -398,9 +403,13 @@ namespace WpfApp1_mastermind3_final_edition
         /// </summary>
         private void Historiek()
         {
+
+
             RowDefinition newRow = new RowDefinition();
             newRow.Height = GridLength.Auto;
             historiekgrid.RowDefinitions.Add(newRow);
+
+
 
             Label historiekLabel1 = new Label();
             historiekLabel1.Height = 22;
@@ -410,8 +419,12 @@ namespace WpfApp1_mastermind3_final_edition
             historiekLabel1.BorderBrush = label1.BorderBrush;
             historiekLabel1.BorderThickness = label1.BorderThickness;
 
+
             Grid.SetRow(historiekLabel1, row);
             Grid.SetColumn(historiekLabel1, 0);
+            Addtooltip(historiekLabel1);
+
+
 
             Label historiekLabel2 = new Label();
             historiekLabel2.Height = 22;
@@ -420,33 +433,46 @@ namespace WpfApp1_mastermind3_final_edition
             historiekLabel2.Background = label2.Background;
             historiekLabel2.BorderBrush = label2.BorderBrush;
             historiekLabel2.BorderThickness = label2.BorderThickness;
+
+
             Grid.SetRow(historiekLabel2, row);
             Grid.SetColumn(historiekLabel2, 1);
+            Addtooltip(historiekLabel2);
+
 
             Label historiekLabel3 = new Label();
             historiekLabel3.Height = 22;
             historiekLabel3.Width = 75;
-            historiekLabel2.Margin = new Thickness(2);
+            historiekLabel3.Margin = new Thickness(2);
             historiekLabel3.Background = label3.Background;
             historiekLabel3.BorderBrush = label3.BorderBrush;
             historiekLabel3.BorderThickness = label3.BorderThickness;
+
+
             Grid.SetRow(historiekLabel3, row);
             Grid.SetColumn(historiekLabel3, 2);
+            Addtooltip(historiekLabel3);
+
 
             Label historiekLabel4 = new Label();
             historiekLabel4.Height = 22;
             historiekLabel4.Width = 75;
-            historiekLabel2.Margin = new Thickness(2);
+            historiekLabel4.Margin = new Thickness(2);
             historiekLabel4.Background = label4.Background;
             historiekLabel4.BorderBrush = label4.BorderBrush;
             historiekLabel4.BorderThickness = label4.BorderThickness;
+
+
             Grid.SetRow(historiekLabel4, row);
             Grid.SetColumn(historiekLabel4, 3);
+            Addtooltip(historiekLabel4);
+
 
             historiekgrid.Children.Add(historiekLabel1);
             historiekgrid.Children.Add(historiekLabel2);
             historiekgrid.Children.Add(historiekLabel3);
             historiekgrid.Children.Add(historiekLabel4);
+
 
             row++;
 
@@ -476,7 +502,7 @@ namespace WpfApp1_mastermind3_final_edition
                     volgendeSpeler = "Dit was de laatste speler!";
 
                 }
-                MessageBoxResult result = MessageBox.Show($"Je hebt gewonnen in {attempts} beurten! \r\n De volgende speler is {volgendeSpeler}",
+                MessageBoxResult result = MessageBox.Show($"Je hebt gewonnen in {attempts} beurten! \r\nDe volgende speler is {volgendeSpeler}",
                     $"{spelerNamen[spelerIndex]}", MessageBoxButton.OK, MessageBoxImage.Information);
 
                 if (result == MessageBoxResult.OK)
@@ -528,23 +554,8 @@ namespace WpfApp1_mastermind3_final_edition
         /// </summary>
         private void Startcountdown()
         {
-            timer.Interval = TimeSpan.FromMilliseconds(1);
-            timer.Tick += Timer_Tick;
-
-            if (timerStarted == false)
-            {
-                clicked = DateTime.Now;
-                timer.Start();
-                timerStarted = true;
-
-            }
-            else
-            {
-                Stopcountdown();
-                clicked = DateTime.Now;
-                timer.Start();
-
-            }
+            elapsedTime = totalTime;
+            timer.Start();
         }
 
         /// <summary>
@@ -581,7 +592,7 @@ namespace WpfApp1_mastermind3_final_edition
             historiekgrid.Children.Clear();
             points = 100;
 
-            
+
             UpdatePointsLabel();
 
 
@@ -590,9 +601,9 @@ namespace WpfApp1_mastermind3_final_edition
         /// Inputbox wordt gegenereerd, deze blijft genereren totdat de input correct is ingevuld
         /// </summary>
         /// <returns>Naam speler</returns>
-        private void Startgame() 
+        private void Startgame()
         {
-          
+
 
             while (extraSpeler)
             {
@@ -608,6 +619,15 @@ namespace WpfApp1_mastermind3_final_edition
                 }
 
                 spelerNamen.Add(inputNaam);
+
+                Label stackpanelnaam = new Label();
+                stackpanelnaam.Content = inputNaam;
+                stackpanelnaam.Width = 40;
+                stackpanelnaam.Height = 80;
+                stackpanelnaam.Foreground = Brushes.White;
+                playerStackpanel.Children.Add(stackpanelnaam);
+
+
                 MessageBoxResult result = MessageBox.Show("Nog een naam invullen?", "Extra speler", MessageBoxButton.YesNo, MessageBoxImage.Question);
 
                 if (result == MessageBoxResult.No)
@@ -672,17 +692,17 @@ namespace WpfApp1_mastermind3_final_edition
         private void Highscoreshow()
         {
             highscoreTekst = "";
-            
+
             for (int i = 0; i <= spelerIndex; i++)
             {
                 highscoreTekst += $"{highscores[i]}\r\n";
             }
 
-            
+
             MessageBox.Show($"Scoreboard:\r\n{highscoreTekst}", "Highscores");
         }
 
-        
+
         private void UpdatePointsLabel()
         {
             pointslabel.Content = $"Jouw score: {points}/100 || Actieve speler is {spelerNamen[spelerIndex]}";
@@ -690,8 +710,85 @@ namespace WpfApp1_mastermind3_final_edition
 
         private void hintButton_Click(object sender, RoutedEventArgs e)
         {
+            Stopcountdown();
+
+            result = MessageBox.Show("Ja = Correcte kleur en positie van de kleur (-25 punten) \r\nNee = Enkel correcte kleur (-15 punten)", "Choose wisley!", MessageBoxButton.YesNoCancel, MessageBoxImage.Question);
+
+            switch (result)
+            {
+                case MessageBoxResult.Yes:
+                    if (points >= 15)
+                    {
+                        points -= 15;
+                        Hintkleur();
+
+                    }
+                    else
+                    {
+                        MessageBox.Show("Niet genoeg punten over!", "Puntensaldo te laag", MessageBoxButton.OK, MessageBoxImage.Error);
+                    }
+                    break;
+
+                case MessageBoxResult.No:
+                    if (points >= 25)
+                    {
+                        points -= 25;
+                        Hintkleurenpositie();
+
+                    }
+                    else
+                    {
+                        MessageBox.Show("Niet genoeg punten over!", "Puntensaldo te laag", MessageBoxButton.OK, MessageBoxImage.Error);
+                    }
+                    break;
+
+                default:
+                    MessageBox.Show("Geen hints gekocht", "Geanuleerd", MessageBoxButton.OK, MessageBoxImage.Exclamation);
+                    break;
+
+
+            }
 
         }
+        private void Hintkleur()
+        {
+            int randomIndex = rnd.Next(0, kleuren.Length);
+            MessageBox.Show($"Eén van de gezochte kleuren is: {kleuren[randomIndex]}", "Hint: juiste kleur", MessageBoxButton.OK, MessageBoxImage.Information);
+            timer.Start();
+        }
+        private void Hintkleurenpositie()
+        {
+            int randomIndex = rnd.Next(0, kleuren.Length);
+            MessageBox.Show($"Eén van de gezochte kleuren is: {kleuren[randomIndex]} \r\nDeze staat op positie {randomIndex + 1}", "Hint: juiste kleur en positie", MessageBoxButton.OK, MessageBoxImage.Information);
+            timer.Start();
+        }
+
+        private void Addtooltip(Label label)
+        {
+
+
+            if (label.BorderBrush == Brushes.DarkRed)
+            {
+
+                label.ToolTip = "CORRECTE positie en CORRECTE kleur";
+
+            }
+            else if (label.BorderBrush == Brushes.Wheat)
+            {
+
+                label.ToolTip = "FOUTE positie en CORRECTE kleur";
+            }
+            else
+            {
+                label.ToolTip = "FOUTE positie en FOUTE kleur";
+            }
+
+        }
+
+        private void 
+      
+
     }
 }
+
 
